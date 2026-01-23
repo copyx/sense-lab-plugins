@@ -1,0 +1,20 @@
+# Claude Code local settings (user-specific, not for version control)
+.claude/*.local.md
+.claude/*.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Node modules
+node_modules/
+
+# Bun
+*.lockb
