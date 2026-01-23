@@ -11,7 +11,13 @@ Proofreads your English prompts before Claude Code executes them, providing educ
 
 ## Prerequisites
 
-Install the Claude Agent SDK globally:
+1. Install [Bun](https://bun.sh):
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+2. Install the Claude Agent SDK globally:
 
 ```bash
 npm install -g @anthropic-ai/claude-agent-sdk
@@ -57,6 +63,16 @@ This is called the "bare infinitive" pattern. Compare: "help me do" (correct)
 vs "help me to do" (less natural in American English).
 
 Please revise your prompt and re-submit.
+```
+
+## Development
+
+```bash
+# Install dependencies
+bun install
+
+# Run tests
+bun test
 ```
 
 ## License
