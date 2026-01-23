@@ -6,5 +6,12 @@ if ! command -v bun &> /dev/null; then
   exit 0
 fi
 
-# Run the actual dependency check
-exec bun run "${CLAUDE_PLUGIN_ROOT}/hooks/ensure-deps.ts"
+# Check if node_modules exists, install if not
+if [ ! -d "${CLAUDE_PLUGIN_ROOT}/node_modules" ]; then
+  echo "Installing english-proofreader dependencies..." >&2
+  cd "${CLAUDE_PLUGIN_ROOT}" && bun install >&2
+  echo "Dependencies installed successfully." >&2
+fi
+
+# Output empty JSON to indicate success
+echo '{}'
