@@ -54,7 +54,7 @@ NO_ISSUES
 
 If there ARE issues, respond in this format for EACH issue:
 
-✗ "[original phrase]" → "[corrected phrase]"
+💡 "[original phrase]" → "[corrected phrase]"
 Explanation: [Detailed educational explanation of why this is wrong and how to remember the correct usage. Include grammar rules, common patterns, or helpful tips.]
 
 ---
@@ -116,7 +116,7 @@ async function main(): Promise<void> {
       // Allow with suppressed output
       const output: HookOutputBlock = {
         suppressOutput: true,
-        systemMessage: "✓ No English issues found",
+        systemMessage: "✅ No English issues found",
       };
       console.log(JSON.stringify(output));
     }
