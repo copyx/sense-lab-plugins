@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/ensure-deps.ts",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/ensure-deps.sh",
             "timeout": 120
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/proofread.ts",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/proofread.sh",
             "timeout": 60
           }
         ]
