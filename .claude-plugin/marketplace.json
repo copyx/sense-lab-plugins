@@ -1,0 +1,23 @@
+{
+  "name": "sense-lab-plugins",
+  "owner": {
+    "name": "jingi.kim"
+  },
+  "metadata": {
+    "description": "A personal Claude Code plugin marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "english-proofreader",
+      "source": "./english-proofreader",
+      "description": "Proofreads English prompts before execution with educational feedback",
+      "version": "1.0.0",
+      "author": {
+        "name": "jingi.kim"
+      },
+      "license": "MIT",
+      "keywords": ["english", "proofreading", "grammar", "learning"]
+    }
+  ]
+}
