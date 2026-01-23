@@ -2,11 +2,18 @@
 
 import { createRequire } from "module";
 import { execSync } from "child_process";
+import { fileURLToPath } from "url";
 
-// Get global npm modules path and load SDK from there
-const globalModulesPath = execSync("npm root -g", { encoding: "utf-8" }).trim();
-const require = createRequire(`${globalModulesPath}/`);
-const { query } = require("@anthropic-ai/claude-agent-sdk");
+// Lazy-load SDK to avoid loading when imported for testing
+let _query = null;
+function getQuery() {
+  if (!_query) {
+    const globalModulesPath = execSync("npm root -g", { encoding: "utf-8" }).trim();
+    const require = createRequire(`${globalModulesPath}/`);
+    _query = require("@anthropic-ai/claude-agent-sdk").query;
+  }
+  return _query;
+}
 
 // Read stdin
 async function readStdin() {
@@ -18,12 +25,12 @@ async function readStdin() {
 }
 
 // Check if text contains English letters
-function containsEnglish(text) {
+export function containsEnglish(text) {
   return /[a-zA-Z]/.test(text);
 }
 
 // Build proofreading prompt
-function buildProofreadPrompt(text) {
+export function buildProofreadPrompt(text) {
   return `You are an English proofreading assistant for a non-native speaker who wants to learn.
 
 Analyze the following text for:
@@ -52,7 +59,7 @@ Be thorough but focus on actual errors, not style preferences. If the English is
 }
 
 // Parse proofreading result
-function parseProofreadResult(result) {
+export function parseProofreadResult(result) {
   const trimmed = result.trim();
 
   if (trimmed === "NO_ISSUES" || trimmed.startsWith("NO_ISSUES")) {
@@ -77,6 +84,7 @@ async function main() {
     }
 
     // 3. Call Claude for proofreading
+    const query = getQuery();
     let result = "";
     for await (const message of query({
       prompt: buildProofreadPrompt(prompt),
@@ -117,4 +125,8 @@ async function main() {
   process.exit(0);
 }
 
-main();
+// Only run main when executed directly, not when imported
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMainModule) {
+  main();
+}
