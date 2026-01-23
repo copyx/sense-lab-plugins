@@ -19,6 +19,8 @@ curl -fsSL https://bun.sh/install | bash
 
 ## Installation
 
+Dependencies are installed automatically on first session start.
+
 ```bash
 # Add the marketplace (if not already added)
 /plugin marketplace add jingi-kim/sense-lab-plugins
