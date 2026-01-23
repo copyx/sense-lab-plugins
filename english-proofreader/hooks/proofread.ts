@@ -1,26 +1,6 @@
 #!/usr/bin/env bun
 
-import { createRequire } from "module";
-import { execSync } from "child_process";
-
-// Types for the Agent SDK
-interface QueryOptions {
-  allowedTools: string[];
-  maxTurns: number;
-  model: "sonnet" | "opus" | "haiku" | "inherit";
-}
-
-interface QueryParams {
-  prompt: string;
-  options: QueryOptions;
-}
-
-interface QueryMessage {
-  type: string;
-  result?: string;
-}
-
-type QueryFunction = (params: QueryParams) => AsyncIterable<QueryMessage>;
+import { query } from "@anthropic-ai/claude-agent-sdk";
 
 // Types for hook input/output
 interface HookInput {
@@ -37,18 +17,6 @@ interface HookOutputBlock {
 interface ProofreadResult {
   hasIssues: boolean;
   feedback: string;
-}
-
-// Lazy-load SDK to avoid loading when imported for testing
-let _query: QueryFunction | null = null;
-
-function getQuery(): QueryFunction {
-  if (!_query) {
-    const globalModulesPath = execSync("npm root -g", { encoding: "utf-8" }).trim();
-    const require = createRequire(`${globalModulesPath}/`);
-    _query = require("@anthropic-ai/claude-agent-sdk").query;
-  }
-  return _query;
 }
 
 // Read stdin
@@ -120,7 +88,6 @@ async function main(): Promise<void> {
     }
 
     // 3. Call Claude for proofreading
-    const query = getQuery();
     let result = "";
     for await (const message of query({
       prompt: buildProofreadPrompt(prompt),
@@ -130,7 +97,7 @@ async function main(): Promise<void> {
         model: "haiku",
       },
     })) {
-      if (message.type === "result" && message.result) {
+      if (message.type === "result" && "result" in message && message.result) {
         result = message.result;
       }
     }

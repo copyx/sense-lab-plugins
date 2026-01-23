@@ -4,8 +4,10 @@
   "workspaces": {
     "": {
       "name": "english-proofreader",
-      "devDependencies": {
+      "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+      },
+      "devDependencies": {
         "@types/node": "^22.0.0",
         "bun-types": "^1.2.0",
         "typescript": "^5.7.0",

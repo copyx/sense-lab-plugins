@@ -11,16 +11,10 @@ Proofreads your English prompts before Claude Code executes them, providing educ
 
 ## Prerequisites
 
-1. Install [Bun](https://bun.sh):
+Install [Bun](https://bun.sh):
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
-```
-
-2. Install the Claude Agent SDK globally:
-
-```bash
-npm install -g @anthropic-ai/claude-agent-sdk
 ```
 
 ## Installation
