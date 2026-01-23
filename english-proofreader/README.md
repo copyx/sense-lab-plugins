@@ -8,6 +8,7 @@ Proofreads your English prompts before Claude Code executes them, providing educ
 - Educational feedback with grammar explanations
 - Handles mixed Korean/English content (proofreads English parts only)
 - Does not consume conversation context
+- Automatic dependency installation on first use
 
 ## Prerequisites
 
@@ -17,9 +18,9 @@ Install [Bun](https://bun.sh):
 curl -fsSL https://bun.sh/install | bash
 ```
 
-## Installation
+Then restart your terminal.
 
-Dependencies are installed automatically on first session start.
+## Installation
 
 ```bash
 # Add the marketplace (if not already added)
@@ -28,6 +29,8 @@ Dependencies are installed automatically on first session start.
 # Install the plugin
 /plugin install english-proofreader@sense-lab-plugins
 ```
+
+Dependencies are installed automatically on first session start.
 
 ## Usage
 
@@ -41,6 +44,9 @@ Once installed, the plugin automatically proofreads every English prompt you sub
 **If no issues:**
 - You see "✓ No English issues found"
 - Your prompt executes normally
+
+**If Bun is not installed:**
+- You see an error message with installation instructions
 
 ## Example
 
@@ -61,14 +67,66 @@ vs "help me to do" (less natural in American English).
 Please revise your prompt and re-submit.
 ```
 
+## How It Works
+
+```
+SessionStart
+    ↓
+ensure-deps.sh
+    ↓
+Bun installed? ─No──→ Block with install instructions
+    ↓ Yes
+node_modules exists? ─No──→ Run `bun install`
+    ↓ Yes
+Ready
+
+UserPromptSubmit
+    ↓
+proofread.sh
+    ↓
+Bun installed? ─No──→ Block with install instructions
+    ↓ Yes
+proofread.ts
+    ↓
+Contains English? ─No──→ Allow (silent)
+    ↓ Yes
+Call Claude Haiku via Agent SDK
+    ↓
+Issues found? ─No──→ Allow + "✓ No issues"
+    ↓ Yes
+Block + educational feedback
+```
+
+## Plugin Structure
+
+```
+english-proofreader/
+├── .claude-plugin/
+│   └── plugin.json          # Plugin metadata
+├── hooks/
+│   ├── hooks.json           # Hook configuration
+│   ├── ensure-deps.sh       # Bun check + dependency installation
+│   ├── proofread.sh         # Bun check wrapper
+│   ├── proofread.ts         # Proofreading logic (TypeScript)
+│   └── proofread.test.ts    # Tests
+├── package.json             # Dependencies
+├── tsconfig.json            # TypeScript config
+└── README.md
+```
+
 ## Development
 
 ```bash
+cd english-proofreader
+
 # Install dependencies
 bun install
 
 # Run tests
 bun test
+
+# Type check
+bun run tsc --noEmit
 ```
 
 ## License
