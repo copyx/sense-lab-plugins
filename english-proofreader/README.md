@@ -9,6 +9,7 @@ Proofreads your English prompts before Claude Code executes them, providing educ
 - Handles mixed Korean/English content (proofreads English parts only)
 - Does not consume conversation context
 - Automatic dependency installation on first use
+- Context-aware proofreading - Uses Claude's last response to understand contextual replies
 
 ## Prerequisites
 
@@ -90,7 +91,9 @@ proofread.ts
     ↓
 Contains English? ─No──→ Allow (silent)
     ↓ Yes
-Call Claude Haiku via Agent SDK
+Read transcript → Get Claude's last response (if available)
+    ↓
+Call Claude Haiku (with context)
     ↓
 Issues found? ─No──→ Allow + "✓ No issues"
     ↓ Yes
