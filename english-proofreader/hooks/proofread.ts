@@ -5,6 +5,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 // Types for hook input/output
 interface HookInput {
   prompt?: string;
+  transcript_path?: string;
 }
 
 interface HookOutputBlock {
