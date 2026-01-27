@@ -423,4 +423,36 @@ describe("Integration: proofread.ts script", () => {
     },
     { timeout: INTEGRATION_TIMEOUT }
   );
+
+  it(
+    "should allow contextual short reply with transcript",
+    async () => {
+      // Create a temp transcript file
+      const tempDir = await mkdtemp(join(tmpdir(), "proofread-integration-"));
+      const transcriptPath = join(tempDir, "transcript.jsonl");
+      const transcriptContent = [
+        JSON.stringify({ type: "human", content: "What should I do?" }),
+        JSON.stringify({
+          type: "assistant",
+          content: "You have two options:\n1. Option A - faster\n2. Option B - more thorough\n\nWhich would you prefer?",
+        }),
+      ].join("\n");
+      await writeFile(transcriptPath, transcriptContent);
+
+      try {
+        const { stdout, code } = await runScript({
+          prompt: "The second one",
+          transcript_path: transcriptPath,
+        });
+        expect(code).toBe(0);
+        const output = JSON.parse(stdout.trim());
+        // Should pass because "The second one" is natural in context
+        expect(output.suppressOutput).toBe(true);
+        expect(output.systemMessage).toContain("No English issues found");
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    },
+    { timeout: INTEGRATION_TIMEOUT }
+  );
 });
