@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { spawn } from "child_process";
 import { join } from "path";
 
@@ -8,7 +8,10 @@ import {
   parseProofreadResult,
   truncateContext,
   extractTextContent,
+  getLastAssistantMessage,
 } from "./proofread";
+import { mkdtemp, rm, writeFile } from "fs/promises";
+import { tmpdir } from "os";
 
 const SCRIPT_PATH = join(import.meta.dir, "proofread.ts");
 
@@ -150,6 +153,84 @@ describe("extractTextContent", () => {
   it("should handle array with no text blocks", () => {
     const content = [{ type: "tool_use", id: "123", name: "read", input: {} }];
     expect(extractTextContent(content)).toBe("");
+  });
+});
+
+describe("getLastAssistantMessage", () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "proofread-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("should return null for non-existent file", async () => {
+    const result = await getLastAssistantMessage("/nonexistent/path.jsonl");
+    expect(result).toBeNull();
+  });
+
+  it("should return null for empty file", async () => {
+    const filePath = join(tempDir, "empty.jsonl");
+    await writeFile(filePath, "");
+    const result = await getLastAssistantMessage(filePath);
+    expect(result).toBeNull();
+  });
+
+  it("should return null when no assistant messages", async () => {
+    const filePath = join(tempDir, "no-assistant.jsonl");
+    const content = [
+      JSON.stringify({ type: "human", content: "Hello" }),
+      JSON.stringify({ type: "system", content: "System message" }),
+    ].join("\n");
+    await writeFile(filePath, content);
+    const result = await getLastAssistantMessage(filePath);
+    expect(result).toBeNull();
+  });
+
+  it("should extract last assistant message with string content", async () => {
+    const filePath = join(tempDir, "string-content.jsonl");
+    const content = [
+      JSON.stringify({ type: "human", content: "Hello" }),
+      JSON.stringify({ type: "assistant", content: "First response" }),
+      JSON.stringify({ type: "human", content: "Follow up" }),
+      JSON.stringify({ type: "assistant", content: "Last response" }),
+    ].join("\n");
+    await writeFile(filePath, content);
+    const result = await getLastAssistantMessage(filePath);
+    expect(result).toBe("Last response");
+  });
+
+  it("should extract text from array content", async () => {
+    const filePath = join(tempDir, "array-content.jsonl");
+    const content = [
+      JSON.stringify({ type: "human", content: "Hello" }),
+      JSON.stringify({
+        type: "assistant",
+        content: [
+          { type: "text", text: "Part one. " },
+          { type: "tool_use", id: "1", name: "test", input: {} },
+          { type: "text", text: "Part two." },
+        ],
+      }),
+    ].join("\n");
+    await writeFile(filePath, content);
+    const result = await getLastAssistantMessage(filePath);
+    expect(result).toBe("Part one. Part two.");
+  });
+
+  it("should handle file with trailing newline", async () => {
+    const filePath = join(tempDir, "trailing-newline.jsonl");
+    const content =
+      [
+        JSON.stringify({ type: "human", content: "Hello" }),
+        JSON.stringify({ type: "assistant", content: "Response" }),
+      ].join("\n") + "\n";
+    await writeFile(filePath, content);
+    const result = await getLastAssistantMessage(filePath);
+    expect(result).toBe("Response");
   });
 });
 

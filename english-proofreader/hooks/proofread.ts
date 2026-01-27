@@ -59,6 +59,77 @@ export function extractTextContent(content: MessageContent): string {
     .join("");
 }
 
+// Transcript message structure
+interface TranscriptMessage {
+  type: "human" | "assistant" | "system";
+  content: MessageContent;
+}
+
+// Read transcript from end and extract last assistant message
+export async function getLastAssistantMessage(
+  transcriptPath: string
+): Promise<string | null> {
+  try {
+    const file = Bun.file(transcriptPath);
+    const exists = await file.exists();
+    if (!exists) {
+      return null;
+    }
+
+    const fileSize = file.size;
+    if (fileSize === 0) {
+      return null;
+    }
+
+    const CHUNK_SIZE = 4096;
+    let position = fileSize;
+    let buffer = "";
+
+    while (position > 0) {
+      const readSize = Math.min(CHUNK_SIZE, position);
+      position -= readSize;
+
+      const chunk = await file.slice(position, position + readSize).text();
+      buffer = chunk + buffer;
+
+      const lines = buffer.split("\n");
+      buffer = lines[0]; // Keep incomplete first line
+
+      // Check complete lines from end
+      for (let i = lines.length - 1; i >= 1; i--) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        try {
+          const msg: TranscriptMessage = JSON.parse(line);
+          if (msg.type === "assistant") {
+            return extractTextContent(msg.content);
+          }
+        } catch {
+          // Skip malformed lines
+          continue;
+        }
+      }
+    }
+
+    // Check remaining buffer
+    if (buffer.trim()) {
+      try {
+        const msg: TranscriptMessage = JSON.parse(buffer.trim());
+        if (msg.type === "assistant") {
+          return extractTextContent(msg.content);
+        }
+      } catch {
+        // Skip malformed line
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // Build proofreading prompt
 export function buildProofreadPrompt(text: string): string {
   return `You are an English proofreading assistant for a non-native speaker who wants to learn.
