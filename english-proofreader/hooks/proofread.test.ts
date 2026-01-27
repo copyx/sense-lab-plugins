@@ -6,6 +6,7 @@ import {
   containsEnglish,
   buildProofreadPrompt,
   parseProofreadResult,
+  truncateContext,
 } from "./proofread";
 
 const SCRIPT_PATH = join(import.meta.dir, "proofread.ts");
@@ -91,6 +92,31 @@ describe("containsEnglish", () => {
   it("should return true for single English letter", () => {
     expect(containsEnglish("a")).toBe(true);
     expect(containsEnglish("Z")).toBe(true);
+  });
+});
+
+describe("truncateContext", () => {
+  it("should return text unchanged if under limit", () => {
+    const text = "Short context";
+    expect(truncateContext(text)).toBe(text);
+  });
+
+  it("should return text unchanged if exactly at limit", () => {
+    const text = "x".repeat(2000);
+    expect(truncateContext(text)).toBe(text);
+  });
+
+  it("should truncate from start and keep end", () => {
+    const text = "START" + "x".repeat(2000) + "END";
+    const result = truncateContext(text);
+    expect(result.length).toBe(2003); // "..." + 2000 chars
+    expect(result.startsWith("...")).toBe(true);
+    expect(result.endsWith("END")).toBe(true);
+    expect(result).not.toContain("START");
+  });
+
+  it("should handle empty string", () => {
+    expect(truncateContext("")).toBe("");
   });
 });
 

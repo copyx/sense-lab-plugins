@@ -34,6 +34,17 @@ export function containsEnglish(text: string): boolean {
   return /[a-zA-Z]/.test(text);
 }
 
+// Maximum context size in characters (~500 tokens)
+const MAX_CONTEXT_CHARS = 2000;
+
+// Truncate context to limit, keeping the end (most relevant to user's reply)
+export function truncateContext(text: string): string {
+  if (text.length <= MAX_CONTEXT_CHARS) {
+    return text;
+  }
+  return "..." + text.slice(-MAX_CONTEXT_CHARS);
+}
+
 // Build proofreading prompt
 export function buildProofreadPrompt(text: string): string {
   return `You are an English proofreading assistant for a non-native speaker who wants to learn.
