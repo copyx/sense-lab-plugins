@@ -198,10 +198,19 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
-    // 3. Call Claude for proofreading
+    // 3. Get context from transcript (if available)
+    let context: string | null = null;
+    if (input.transcript_path) {
+      const lastAssistant = await getLastAssistantMessage(input.transcript_path);
+      if (lastAssistant) {
+        context = truncateContext(lastAssistant);
+      }
+    }
+
+    // 4. Call Claude for proofreading
     let result = "";
     for await (const message of query({
-      prompt: buildProofreadPrompt(prompt),
+      prompt: buildProofreadPrompt(prompt, context),
       options: {
         allowedTools: [],
         maxTurns: 1,
@@ -213,7 +222,7 @@ async function main(): Promise<void> {
       }
     }
 
-    // 4. Parse response and output appropriate JSON
+    // 5. Parse response and output appropriate JSON
     const parsed = parseProofreadResult(result);
 
     if (parsed.hasIssues) {
