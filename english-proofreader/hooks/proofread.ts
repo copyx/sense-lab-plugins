@@ -45,6 +45,20 @@ export function truncateContext(text: string): string {
   return "..." + text.slice(-MAX_CONTEXT_CHARS);
 }
 
+// Content can be string or array of content blocks
+type MessageContent = string | Array<{ type: string; text?: string }>;
+
+// Extract text from message content (handles both string and array formats)
+export function extractTextContent(content: MessageContent): string {
+  if (typeof content === "string") {
+    return content;
+  }
+  return content
+    .filter((block) => block.type === "text" && block.text)
+    .map((block) => block.text!)
+    .join("");
+}
+
 // Build proofreading prompt
 export function buildProofreadPrompt(text: string): string {
   return `You are an English proofreading assistant for a non-native speaker who wants to learn.

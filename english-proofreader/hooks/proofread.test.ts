@@ -7,6 +7,7 @@ import {
   buildProofreadPrompt,
   parseProofreadResult,
   truncateContext,
+  extractTextContent,
 } from "./proofread";
 
 const SCRIPT_PATH = join(import.meta.dir, "proofread.ts");
@@ -117,6 +118,38 @@ describe("truncateContext", () => {
 
   it("should handle empty string", () => {
     expect(truncateContext("")).toBe("");
+  });
+});
+
+describe("extractTextContent", () => {
+  it("should return string content as-is", () => {
+    expect(extractTextContent("Hello world")).toBe("Hello world");
+  });
+
+  it("should extract text from content array", () => {
+    const content = [
+      { type: "text", text: "First part. " },
+      { type: "text", text: "Second part." },
+    ];
+    expect(extractTextContent(content)).toBe("First part. Second part.");
+  });
+
+  it("should skip non-text blocks in array", () => {
+    const content = [
+      { type: "text", text: "Text here. " },
+      { type: "tool_use", id: "123", name: "read", input: {} },
+      { type: "text", text: "More text." },
+    ];
+    expect(extractTextContent(content)).toBe("Text here. More text.");
+  });
+
+  it("should handle empty array", () => {
+    expect(extractTextContent([])).toBe("");
+  });
+
+  it("should handle array with no text blocks", () => {
+    const content = [{ type: "tool_use", id: "123", name: "read", input: {} }];
+    expect(extractTextContent(content)).toBe("");
   });
 });
 
