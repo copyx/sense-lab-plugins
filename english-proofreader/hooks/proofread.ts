@@ -131,15 +131,29 @@ export async function getLastAssistantMessage(
 }
 
 // Build proofreading prompt
-export function buildProofreadPrompt(text: string): string {
+export function buildProofreadPrompt(
+  text: string,
+  context?: string | null
+): string {
+  const contextSection = context
+    ? `For context, here is Claude's previous response that the user is replying to:
+"""
+${context}
+"""
+
+`
+    : "";
+
   return `You are an English proofreading assistant for a non-native speaker who wants to learn.
 
-Analyze the following text for:
+${contextSection}Analyze the following text for:
 1. Grammar errors
 2. Wrong word usage
 3. Unnatural expressions (from a native speaker's perspective)
 
 Focus ONLY on the English parts. Ignore any Korean or other non-English text.
+
+IMPORTANT: Consider the context when evaluating. Short replies like "Yes, do that" or "The second one" are natural when responding to a previous message.
 
 Text to proofread:
 """

@@ -257,6 +257,27 @@ describe("buildProofreadPrompt", () => {
     const prompt = buildProofreadPrompt("test");
     expect(prompt).toContain("Explanation:");
   });
+
+  it("should include context when provided", () => {
+    const prompt = buildProofreadPrompt("Yes, do that", "I can help with option A or option B");
+    expect(prompt).toContain("Claude's previous response");
+    expect(prompt).toContain("I can help with option A or option B");
+  });
+
+  it("should not include context section when null", () => {
+    const prompt = buildProofreadPrompt("test", null);
+    expect(prompt).not.toContain("Claude's previous response");
+  });
+
+  it("should not include context section when undefined", () => {
+    const prompt = buildProofreadPrompt("test", undefined);
+    expect(prompt).not.toContain("Claude's previous response");
+  });
+
+  it("should include instruction about contextual replies", () => {
+    const prompt = buildProofreadPrompt("Yes", "Do you want A or B?");
+    expect(prompt).toContain("Consider the context");
+  });
 });
 
 describe("parseProofreadResult", () => {
