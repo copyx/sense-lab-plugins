@@ -45,6 +45,48 @@ export function truncateContext(text: string): string {
   return "..." + text.slice(-MAX_CONTEXT_CHARS);
 }
 
+// Check if a mention name has a file extension (e.g. .ts, .json)
+function hasDotExtension(name: string): boolean {
+  return /\.\w+/.test(name);
+}
+
+// Strip slash commands and mentions from prompt text
+export function stripSpecialTokens(text: string): string {
+  let result = text;
+
+  // 1. Strip leading slash command token
+  if (result.startsWith("/")) {
+    result = result.replace(/^\/\S+\s*/, "");
+  }
+
+  // 2. Strip quoted mentions: @"..."
+  result = result.replace(/@"([^"]+)"/g, (_match, content: string) => {
+    if (hasDotExtension(content)) {
+      // File mention: keep content, strip @ and quotes
+      return content;
+    }
+    // Agent mention: remove entirely
+    return "";
+  });
+
+  // 3. Strip unquoted mentions: @something
+  result = result.replace(/@(\S+)/g, (match, name: string) => {
+    if (hasDotExtension(name)) {
+      // File mention: strip @
+      return name;
+    }
+    if (name.includes("agent")) {
+      // Agent mention: remove entirely
+      return "";
+    }
+    // Ambiguous: leave as-is
+    return match;
+  });
+
+  // Clean up extra spaces
+  return result.replace(/\s+/g, " ").trim();
+}
+
 // Content can be string or array of content blocks
 type MessageContent = string | Array<{ type: string; text?: string }>;
 
