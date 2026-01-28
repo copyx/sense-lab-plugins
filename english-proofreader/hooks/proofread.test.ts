@@ -511,4 +511,18 @@ describe("Integration: proofread.ts script", () => {
     },
     { timeout: INTEGRATION_TIMEOUT }
   );
+
+  it(
+    "should pass through slash command prompts after stripping",
+    async () => {
+      const { stdout, code } = await runScript({
+        prompt: "/commit fix the bug in authentication",
+      });
+      expect(code).toBe(0);
+      const output = JSON.parse(stdout.trim());
+      // After stripping "/commit", the remaining text is valid English
+      expect(output.decision).not.toBe("block");
+    },
+    { timeout: INTEGRATION_TIMEOUT }
+  );
 });

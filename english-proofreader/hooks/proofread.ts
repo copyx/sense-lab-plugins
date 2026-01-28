@@ -240,6 +240,15 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
+    // 2.5. Strip special tokens (slash commands, mentions)
+    const strippedPrompt = stripSpecialTokens(prompt);
+
+    // If nothing left after stripping, skip proofreading
+    if (!strippedPrompt.trim()) {
+      console.log(JSON.stringify({}));
+      process.exit(0);
+    }
+
     // 3. Get context from transcript (if available)
     let context: string | null = null;
     if (input.transcript_path) {
@@ -252,7 +261,7 @@ async function main(): Promise<void> {
     // 4. Call Claude for proofreading
     let result = "";
     for await (const message of query({
-      prompt: buildProofreadPrompt(prompt, context),
+      prompt: buildProofreadPrompt(strippedPrompt, context),
       options: {
         allowedTools: [],
         maxTurns: 1,
