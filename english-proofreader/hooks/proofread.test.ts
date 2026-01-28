@@ -9,6 +9,7 @@ import {
   truncateContext,
   extractTextContent,
   getLastAssistantMessage,
+  stripSpecialTokens,
 } from "./proofread";
 import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -307,6 +308,61 @@ describe("parseProofreadResult", () => {
     const feedback = '  ✗ "test" → "corrected"  ';
     const result = parseProofreadResult(feedback);
     expect(result.feedback).toBe(feedback.trim());
+  });
+});
+
+describe("stripSpecialTokens", () => {
+  // Slash commands
+  it("should strip leading slash command", () => {
+    expect(stripSpecialTokens("/commit fix the bug")).toBe("fix the bug");
+  });
+
+  it("should return empty for slash command only", () => {
+    expect(stripSpecialTokens("/commit")).toBe("");
+  });
+
+  // Quoted agent mentions (no dot extension)
+  it("should remove quoted agent mention entirely", () => {
+    expect(stripSpecialTokens('@"code-reviewer" check this')).toBe("check this");
+  });
+
+  it("should remove quoted mention containing 'agent'", () => {
+    expect(stripSpecialTokens('@"my-agent" do something')).toBe("do something");
+  });
+
+  // Quoted file mentions (has dot extension)
+  it("should strip @ and quotes from quoted file mention", () => {
+    expect(stripSpecialTokens('update @"src/index.ts" to add')).toBe("update src/index.ts to add");
+  });
+
+  // Unquoted file mentions (has dot extension)
+  it("should strip @ from unquoted file mention", () => {
+    expect(stripSpecialTokens("update @src/index.ts to add")).toBe("update src/index.ts to add");
+  });
+
+  // Unquoted agent mentions (contains 'agent')
+  it("should remove unquoted mention containing 'agent'", () => {
+    expect(stripSpecialTokens("@test-agent do something")).toBe("do something");
+  });
+
+  // Ambiguous (no extension, no 'agent')
+  it("should leave ambiguous unquoted mention as-is", () => {
+    expect(stripSpecialTokens("@utils do something")).toBe("@utils do something");
+  });
+
+  // Mixed
+  it("should handle slash command + file mention", () => {
+    expect(stripSpecialTokens('/review @"src/app.ts" for bugs')).toBe("src/app.ts for bugs");
+  });
+
+  // No special tokens
+  it("should return plain text unchanged", () => {
+    expect(stripSpecialTokens("fix the bug please")).toBe("fix the bug please");
+  });
+
+  // Whitespace cleanup
+  it("should trim result and collapse multiple spaces", () => {
+    expect(stripSpecialTokens('@"my-agent" check this')).toBe("check this");
   });
 });
 
