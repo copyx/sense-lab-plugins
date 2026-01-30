@@ -13,8 +13,10 @@ import {
   stripSpecialTokens,
   parseFeedbackItems,
   formatFeedbackForUser,
+  appendLog,
 } from "./proofread";
-import { mkdtemp, rm, writeFile } from "fs/promises";
+import type { LogEntry } from "./proofread";
+import { mkdtemp, rm, writeFile, readFile } from "fs/promises";
 import { tmpdir } from "os";
 
 const SCRIPT_PATH = join(import.meta.dir, "proofread.ts");
@@ -442,6 +444,48 @@ describe("formatFeedbackForUser", () => {
   it("should handle empty array", () => {
     const result = formatFeedbackForUser([]);
     expect(result).toBe("");
+  });
+});
+
+describe("appendLog", () => {
+  let tempDir: string;
+  let originalHome: string | undefined;
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "proofread-log-test-"));
+    originalHome = process.env.HOME;
+    process.env.HOME = tempDir;
+  });
+
+  afterEach(async () => {
+    process.env.HOME = originalHome;
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("should create log directory and write JSONL entry", async () => {
+    await appendLog({
+      timestamp: "2026-01-30T00:00:00.000Z",
+      prompt: "test prompt",
+      feedback: [{ original: "a", corrected: "b", explanation: "reason" }],
+      decision: "block",
+    });
+
+    const logPath = join(tempDir, ".english-proofreader", "logs", "2026-01-30.jsonl");
+    const content = await readFile(logPath, "utf-8");
+    const entry = JSON.parse(content.trim());
+    expect(entry.prompt).toBe("test prompt");
+    expect(entry.decision).toBe("block");
+    expect(entry.feedback).toHaveLength(1);
+  });
+
+  it("should append multiple entries to the same daily file", async () => {
+    const base = { timestamp: "2026-01-30T00:00:00.000Z", prompt: "p", feedback: [] as any[], decision: "pass" as const };
+    await appendLog(base);
+    await appendLog({ ...base, prompt: "p2" });
+
+    const logPath = join(tempDir, ".english-proofreader", "logs", "2026-01-30.jsonl");
+    const lines = (await readFile(logPath, "utf-8")).trim().split("\n");
+    expect(lines).toHaveLength(2);
   });
 });
 

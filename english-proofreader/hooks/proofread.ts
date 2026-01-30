@@ -53,6 +53,26 @@ export function formatFeedbackForUser(items: FeedbackItem[]): string {
     .join("\n\n---\n\n");
 }
 
+export interface LogEntry {
+  timestamp: string;
+  prompt: string;
+  feedback: FeedbackItem[];
+  decision: "block" | "pass";
+}
+
+export async function appendLog(entry: LogEntry): Promise<void> {
+  try {
+    const home = process.env.HOME || homedir();
+    const logDir = join(home, ".english-proofreader", "logs");
+    await mkdir(logDir, { recursive: true });
+    const date = entry.timestamp.slice(0, 10);
+    const filePath = join(logDir, `${date}.jsonl`);
+    await appendFile(filePath, JSON.stringify(entry) + "\n");
+  } catch (err) {
+    console.error(`Log write error: ${(err as Error).message}`);
+  }
+}
+
 // Read stdin
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
