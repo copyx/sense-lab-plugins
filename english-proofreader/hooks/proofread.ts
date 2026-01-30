@@ -42,6 +42,17 @@ export function parseFeedbackItems(text: string): FeedbackItem[] {
   }
 }
 
+export function formatFeedbackForUser(items: FeedbackItem[]): string {
+  if (items.length === 0) return "";
+
+  return items
+    .map((item) => {
+      if (item.raw) return item.raw;
+      return `💡 "${item.original}" → "${item.corrected}"\nExplanation: ${item.explanation}`;
+    })
+    .join("\n\n---\n\n");
+}
+
 // Read stdin
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];

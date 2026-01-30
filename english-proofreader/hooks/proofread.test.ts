@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { spawn } from "child_process";
 import { join } from "path";
 
+import type { FeedbackItem } from "./proofread";
 import {
   containsEnglish,
   buildProofreadPrompt,
@@ -11,6 +12,7 @@ import {
   getLastAssistantMessage,
   stripSpecialTokens,
   parseFeedbackItems,
+  formatFeedbackForUser,
 } from "./proofread";
 import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -400,6 +402,38 @@ describe("parseFeedbackItems", () => {
   it("should handle empty array", () => {
     const items = parseFeedbackItems("[]");
     expect(items).toEqual([]);
+  });
+});
+
+describe("formatFeedbackForUser", () => {
+  it("should format a single structured item", () => {
+    const items: FeedbackItem[] = [
+      { original: "I have went", corrected: "I have gone", explanation: "Use past participle." },
+    ];
+    const result = formatFeedbackForUser(items);
+    expect(result).toBe('💡 "I have went" → "I have gone"\nExplanation: Use past participle.');
+  });
+
+  it("should format multiple items with separator", () => {
+    const items: FeedbackItem[] = [
+      { original: "a", corrected: "b", explanation: "reason1" },
+      { original: "c", corrected: "d", explanation: "reason2" },
+    ];
+    const result = formatFeedbackForUser(items);
+    expect(result).toContain("---");
+    expect(result).toContain('💡 "a" → "b"');
+    expect(result).toContain('💡 "c" → "d"');
+  });
+
+  it("should display raw fallback when structured fields missing", () => {
+    const items: FeedbackItem[] = [{ raw: "some unparsed text" }];
+    const result = formatFeedbackForUser(items);
+    expect(result).toBe("some unparsed text");
+  });
+
+  it("should handle empty array", () => {
+    const result = formatFeedbackForUser([]);
+    expect(result).toBe("");
   });
 });
 
