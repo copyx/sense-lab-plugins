@@ -11,6 +11,7 @@ import {
   extractTextContent,
   getLastAssistantMessage,
   stripSpecialTokens,
+  isSystemPrompt,
   parseFeedbackItems,
   formatFeedbackForUser,
   appendLog,
@@ -102,6 +103,20 @@ describe("containsEnglish", () => {
   it("should return true for single English letter", () => {
     expect(containsEnglish("a")).toBe(true);
     expect(containsEnglish("Z")).toBe(true);
+  });
+});
+
+describe("isSystemPrompt", () => {
+  it("should detect internal Stop hook prompt", () => {
+    expect(isSystemPrompt("Analyze this conversation and determine: Does the assistant have more autonomous work to do RIGHT NOW?  Conversation: [...]")).toBe(true);
+  });
+
+  it("should not flag normal user prompts", () => {
+    expect(isSystemPrompt("Please help me fix this bug")).toBe(false);
+  });
+
+  it("should not flag empty string", () => {
+    expect(isSystemPrompt("")).toBe(false);
   });
 });
 
