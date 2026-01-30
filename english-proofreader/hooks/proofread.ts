@@ -238,12 +238,10 @@ ${text}
 If there are NO issues, respond with exactly:
 NO_ISSUES
 
-If there ARE issues, respond in this format for EACH issue:
+If there ARE issues, respond with ONLY a JSON array (no markdown, no explanation outside the JSON):
+[{"original": "[original phrase]", "corrected": "[corrected phrase]", "explanation": "[Detailed educational explanation of why this is wrong and how to remember the correct usage. Include grammar rules, common patterns, or helpful tips.]"}]
 
-💡 "[original phrase]" → "[corrected phrase]"
-Explanation: [Detailed educational explanation of why this is wrong and how to remember the correct usage. Include grammar rules, common patterns, or helpful tips.]
-
----
+Each object must have "original", "corrected", and "explanation" fields.
 
 Be thorough but focus on actual errors, not style preferences. If the English is grammatically correct and natural-sounding, respond with NO_ISSUES.`;
 }

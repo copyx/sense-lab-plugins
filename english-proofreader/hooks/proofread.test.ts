@@ -257,9 +257,12 @@ describe("buildProofreadPrompt", () => {
     expect(prompt).toContain("NO_ISSUES");
   });
 
-  it("should include feedback format instructions", () => {
+  it("should request JSON array format for issues", () => {
     const prompt = buildProofreadPrompt("test");
-    expect(prompt).toContain("Explanation:");
+    expect(prompt).toContain('"original"');
+    expect(prompt).toContain('"corrected"');
+    expect(prompt).toContain('"explanation"');
+    expect(prompt).toContain("JSON array");
   });
 
   it("should include context when provided", () => {
