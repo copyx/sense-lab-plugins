@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 
 import { query } from "@anthropic-ai/claude-agent-sdk";
+import { mkdir, appendFile } from "node:fs/promises";
+import { join } from "node:path";
+import { homedir } from "node:os";
 
 // Types for hook input/output
 interface HookInput {
@@ -18,6 +21,25 @@ interface HookOutputBlock {
 interface ProofreadResult {
   hasIssues: boolean;
   feedback: string;
+}
+
+export interface FeedbackItem {
+  original?: string;
+  corrected?: string;
+  explanation?: string;
+  raw?: string;
+}
+
+export function parseFeedbackItems(text: string): FeedbackItem[] {
+  try {
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed)) {
+      return [{ raw: text }];
+    }
+    return parsed;
+  } catch {
+    return [{ raw: text }];
+  }
 }
 
 // Read stdin

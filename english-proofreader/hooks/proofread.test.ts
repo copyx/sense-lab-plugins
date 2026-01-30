@@ -10,6 +10,7 @@ import {
   extractTextContent,
   getLastAssistantMessage,
   stripSpecialTokens,
+  parseFeedbackItems,
 } from "./proofread";
 import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -363,6 +364,42 @@ describe("stripSpecialTokens", () => {
   // Whitespace cleanup
   it("should trim result and collapse multiple spaces", () => {
     expect(stripSpecialTokens('@"my-agent" check this')).toBe("check this");
+  });
+});
+
+describe("parseFeedbackItems", () => {
+  it("should parse valid JSON array of feedback items", () => {
+    const json = JSON.stringify([
+      { original: "I have went", corrected: "I have gone", explanation: "Past participle of go is gone." },
+    ]);
+    const items = parseFeedbackItems(json);
+    expect(items).toEqual([
+      { original: "I have went", corrected: "I have gone", explanation: "Past participle of go is gone." },
+    ]);
+  });
+
+  it("should parse multiple items", () => {
+    const json = JSON.stringify([
+      { original: "a", corrected: "b", explanation: "reason1" },
+      { original: "c", corrected: "d", explanation: "reason2" },
+    ]);
+    const items = parseFeedbackItems(json);
+    expect(items).toHaveLength(2);
+  });
+
+  it("should return raw fallback on invalid JSON", () => {
+    const items = parseFeedbackItems("not json at all");
+    expect(items).toEqual([{ raw: "not json at all" }]);
+  });
+
+  it("should return raw fallback when JSON is not an array", () => {
+    const items = parseFeedbackItems(JSON.stringify({ original: "a" }));
+    expect(items).toEqual([{ raw: JSON.stringify({ original: "a" }) }]);
+  });
+
+  it("should handle empty array", () => {
+    const items = parseFeedbackItems("[]");
+    expect(items).toEqual([]);
   });
 });
 
