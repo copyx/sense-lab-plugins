@@ -290,30 +290,35 @@ describe("buildProofreadPrompt", () => {
 describe("parseProofreadResult", () => {
   it("should return hasIssues: false for NO_ISSUES", () => {
     const result = parseProofreadResult("NO_ISSUES");
-    expect(result).toEqual({ hasIssues: false, feedback: "" });
+    expect(result).toEqual({ hasIssues: false, items: [] });
   });
 
   it("should return hasIssues: false for NO_ISSUES with whitespace", () => {
     const result = parseProofreadResult("  NO_ISSUES  ");
-    expect(result).toEqual({ hasIssues: false, feedback: "" });
+    expect(result).toEqual({ hasIssues: false, items: [] });
   });
 
   it("should return hasIssues: false for NO_ISSUES with extra text", () => {
     const result = parseProofreadResult("NO_ISSUES - your text is perfect!");
-    expect(result).toEqual({ hasIssues: false, feedback: "" });
+    expect(result).toEqual({ hasIssues: false, items: [] });
   });
 
-  it("should return hasIssues: true for feedback", () => {
-    const feedback = '✗ "test" → "corrected"\nExplanation: Some reason';
+  it("should return structured items for valid JSON feedback", () => {
+    const json = JSON.stringify([
+      { original: "I have went", corrected: "I have gone", explanation: "Past participle." },
+    ]);
+    const result = parseProofreadResult(json);
+    expect(result.hasIssues).toBe(true);
+    expect(result.items).toEqual([
+      { original: "I have went", corrected: "I have gone", explanation: "Past participle." },
+    ]);
+  });
+
+  it("should return raw fallback for non-JSON feedback", () => {
+    const feedback = 'Some unparsed feedback text';
     const result = parseProofreadResult(feedback);
     expect(result.hasIssues).toBe(true);
-    expect(result.feedback).toBe(feedback);
-  });
-
-  it("should trim feedback whitespace", () => {
-    const feedback = '  ✗ "test" → "corrected"  ';
-    const result = parseProofreadResult(feedback);
-    expect(result.feedback).toBe(feedback.trim());
+    expect(result.items).toEqual([{ raw: feedback }]);
   });
 });
 

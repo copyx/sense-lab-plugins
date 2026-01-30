@@ -20,7 +20,7 @@ interface HookOutputBlock {
 
 interface ProofreadResult {
   hasIssues: boolean;
-  feedback: string;
+  items: FeedbackItem[];
 }
 
 export interface FeedbackItem {
@@ -251,10 +251,10 @@ export function parseProofreadResult(result: string): ProofreadResult {
   const trimmed = result.trim();
 
   if (trimmed === "NO_ISSUES" || trimmed.startsWith("NO_ISSUES")) {
-    return { hasIssues: false, feedback: "" };
+    return { hasIssues: false, items: [] };
   }
 
-  return { hasIssues: true, feedback: trimmed };
+  return { hasIssues: true, items: parseFeedbackItems(trimmed) };
 }
 
 // Main function
