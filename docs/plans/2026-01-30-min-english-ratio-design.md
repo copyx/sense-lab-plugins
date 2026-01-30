@@ -26,7 +26,7 @@ Skip proofreading when less than a configurable percentage of words in the strip
 ### 2. New function: `englishWordRatio(text: string): number`
 
 - Split on whitespace, filter empty strings
-- A word is "English" if it contains at least one ASCII letter (`/[a-zA-Z]/`)
+- A word is "English" if it contains at least one ASCII letter AND no CJK characters (`/[a-zA-Z]/.test(w) && !/[\u3131-\uD79D\u4E00-\u9FFF]/.test(w)`)
 - Return `englishWords.length / totalWords.length`
 - Empty string returns `0`
 
