@@ -30,6 +30,41 @@ export interface FeedbackItem {
   raw?: string;
 }
 
+export interface Settings {
+  skipPatterns: string[];
+  skipAboveLength: number;
+}
+
+const DEFAULT_SETTINGS: Settings = {
+  skipPatterns: ["^Analyze this conversation and determine:"],
+  skipAboveLength: 0,
+};
+
+export async function loadSettings(): Promise<Settings> {
+  try {
+    const home = process.env.HOME || homedir();
+    const settingsDir = join(home, ".english-proofreader");
+    const settingsPath = join(settingsDir, "settings.json");
+
+    let fileContent: string;
+    try {
+      fileContent = await Bun.file(settingsPath).text();
+    } catch {
+      await mkdir(settingsDir, { recursive: true });
+      await Bun.write(settingsPath, JSON.stringify(DEFAULT_SETTINGS, null, 2) + "\n");
+      return { ...DEFAULT_SETTINGS };
+    }
+
+    const parsed = JSON.parse(fileContent);
+    return {
+      skipPatterns: Array.isArray(parsed.skipPatterns) ? parsed.skipPatterns : DEFAULT_SETTINGS.skipPatterns,
+      skipAboveLength: typeof parsed.skipAboveLength === "number" ? parsed.skipAboveLength : DEFAULT_SETTINGS.skipAboveLength,
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
 export function parseFeedbackItems(text: string): FeedbackItem[] {
   try {
     // Strip markdown code fences if present

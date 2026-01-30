@@ -15,9 +15,10 @@ import {
   parseFeedbackItems,
   formatFeedbackForUser,
   appendLog,
+  loadSettings,
 } from "./proofread";
-import type { LogEntry } from "./proofread";
-import { mkdtemp, rm, writeFile, readFile } from "fs/promises";
+import type { LogEntry, Settings } from "./proofread";
+import { mkdtemp, rm, writeFile, readFile, mkdir } from "fs/promises";
 import { tmpdir } from "os";
 
 const SCRIPT_PATH = join(import.meta.dir, "proofread.ts");
@@ -675,4 +676,67 @@ describe("Integration: proofread.ts script", () => {
     },
     { timeout: INTEGRATION_TIMEOUT }
   );
+});
+
+describe("loadSettings", () => {
+  let tempDir: string;
+  let originalHome: string | undefined;
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "proofread-settings-test-"));
+    originalHome = process.env.HOME;
+    process.env.HOME = tempDir;
+  });
+
+  afterEach(async () => {
+    process.env.HOME = originalHome;
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("should return defaults when settings file does not exist", async () => {
+    const settings = await loadSettings();
+    expect(settings.skipPatterns).toEqual(["^Analyze this conversation and determine:"]);
+    expect(settings.skipAboveLength).toBe(0);
+  });
+
+  it("should create default settings file when missing", async () => {
+    await loadSettings();
+    const settingsPath = join(tempDir, ".english-proofreader", "settings.json");
+    const content = JSON.parse(await readFile(settingsPath, "utf-8"));
+    expect(content.skipPatterns).toEqual(["^Analyze this conversation and determine:"]);
+    expect(content.skipAboveLength).toBe(0);
+  });
+
+  it("should read custom settings from file", async () => {
+    const settingsDir = join(tempDir, ".english-proofreader");
+    await mkdir(settingsDir, { recursive: true });
+    await writeFile(
+      join(settingsDir, "settings.json"),
+      JSON.stringify({ skipPatterns: ["^foo", "bar$"], skipAboveLength: 500 })
+    );
+    const settings = await loadSettings();
+    expect(settings.skipPatterns).toEqual(["^foo", "bar$"]);
+    expect(settings.skipAboveLength).toBe(500);
+  });
+
+  it("should merge with defaults when fields are missing", async () => {
+    const settingsDir = join(tempDir, ".english-proofreader");
+    await mkdir(settingsDir, { recursive: true });
+    await writeFile(
+      join(settingsDir, "settings.json"),
+      JSON.stringify({ skipAboveLength: 1000 })
+    );
+    const settings = await loadSettings();
+    expect(settings.skipPatterns).toEqual(["^Analyze this conversation and determine:"]);
+    expect(settings.skipAboveLength).toBe(1000);
+  });
+
+  it("should return defaults on invalid JSON", async () => {
+    const settingsDir = join(tempDir, ".english-proofreader");
+    await mkdir(settingsDir, { recursive: true });
+    await writeFile(join(settingsDir, "settings.json"), "not json{{{");
+    const settings = await loadSettings();
+    expect(settings.skipPatterns).toEqual(["^Analyze this conversation and determine:"]);
+    expect(settings.skipAboveLength).toBe(0);
+  });
 });
