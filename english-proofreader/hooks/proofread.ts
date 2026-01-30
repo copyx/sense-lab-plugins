@@ -32,7 +32,9 @@ export interface FeedbackItem {
 
 export function parseFeedbackItems(text: string): FeedbackItem[] {
   try {
-    const parsed = JSON.parse(text);
+    // Strip markdown code fences if present
+    const stripped = text.replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```\s*$/m, "$1");
+    const parsed = JSON.parse(stripped);
     if (!Array.isArray(parsed)) {
       return [{ raw: text }];
     }

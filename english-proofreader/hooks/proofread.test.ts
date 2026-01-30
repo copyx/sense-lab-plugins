@@ -413,6 +413,18 @@ describe("parseFeedbackItems", () => {
     const items = parseFeedbackItems("[]");
     expect(items).toEqual([]);
   });
+
+  it("should strip markdown code fences before parsing", () => {
+    const json = '```json\n[{"original":"a","corrected":"b","explanation":"reason"}]\n```';
+    const items = parseFeedbackItems(json);
+    expect(items).toEqual([{ original: "a", corrected: "b", explanation: "reason" }]);
+  });
+
+  it("should strip code fences without language tag", () => {
+    const json = '```\n[{"original":"a","corrected":"b","explanation":"reason"}]\n```';
+    const items = parseFeedbackItems(json);
+    expect(items).toEqual([{ original: "a", corrected: "b", explanation: "reason" }]);
+  });
 });
 
 describe("formatFeedbackForUser", () => {
