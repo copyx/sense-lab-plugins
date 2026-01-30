@@ -156,8 +156,8 @@ export function stripSpecialTokens(text: string): string {
     result = result.replace(/^\/\S+\s*/, "");
   }
 
-  // 2. Strip quoted mentions: @"..."
-  result = result.replace(/@"([^"]+)"/g, (_match, content: string) => {
+  // 2. Strip quoted mentions: @"..." (supports both straight and curly quotes)
+  result = result.replace(/@[""\u201C]([^""\u201D]+)[""\u201D]/g, (_match, content: string) => {
     if (hasDotExtension(content)) {
       // File mention: keep content, strip @ and quotes
       return content;

@@ -397,6 +397,15 @@ describe("stripSpecialTokens", () => {
     expect(stripSpecialTokens("@test-agent do something")).toBe("do something");
   });
 
+  // Curly/smart quotes
+  it("should remove quoted agent mention with curly quotes", () => {
+    expect(stripSpecialTokens('@\u201Ccode-simplifier:code-simplifier (agent)\u201D check this')).toBe("check this");
+  });
+
+  it("should strip curly-quoted file mention keeping content", () => {
+    expect(stripSpecialTokens('update @\u201Csrc/index.ts\u201D to add')).toBe("update src/index.ts to add");
+  });
+
   // Ambiguous (no extension, no 'agent')
   it("should leave ambiguous unquoted mention as-is", () => {
     expect(stripSpecialTokens("@utils do something")).toBe("@utils do something");
