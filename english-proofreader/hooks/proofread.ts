@@ -328,20 +328,27 @@ async function main(): Promise<void> {
     const parsed = parseProofreadResult(result);
 
     if (parsed.hasIssues) {
-      // Block with educational feedback
+      const feedback = formatFeedbackForUser(parsed.items);
       const output: HookOutputBlock = {
         decision: "block",
-        reason: `📝 English Proofreading:\n\n${parsed.feedback}\n\nPlease revise your prompt and re-submit.`,
+        reason: `📝 English Proofreading:\n\n${feedback}\n\nPlease revise your prompt and re-submit.`,
       };
       console.log(JSON.stringify(output));
     } else {
-      // Allow with suppressed output
       const output: HookOutputBlock = {
         suppressOutput: true,
         systemMessage: "✅ No English issues found",
       };
       console.log(JSON.stringify(output));
     }
+
+    // 6. Log the result
+    await appendLog({
+      timestamp: new Date().toISOString(),
+      prompt,
+      feedback: parsed.items,
+      decision: parsed.hasIssues ? "block" : "pass",
+    });
   } catch (error) {
     // On error, allow prompt to proceed (fail-open)
     console.error(`Proofreading error: ${(error as Error).message}`);
