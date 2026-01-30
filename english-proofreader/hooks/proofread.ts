@@ -119,9 +119,11 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
-// Check if prompt is an internal system prompt (not user-authored)
-export function isSystemPrompt(text: string): boolean {
-  return text.startsWith("Analyze this conversation and determine:");
+export function shouldSkip(prompt: string, settings: Settings): boolean {
+  if (settings.skipAboveLength > 0 && prompt.length > settings.skipAboveLength) {
+    return true;
+  }
+  return settings.skipPatterns.some((pattern) => new RegExp(pattern).test(prompt));
 }
 
 // Check if text contains English letters
@@ -327,8 +329,9 @@ async function main(): Promise<void> {
     const input: HookInput = JSON.parse(inputJson);
     const prompt = input.prompt || "";
 
-    // 2. Skip internal system prompts
-    if (isSystemPrompt(prompt)) {
+    // 2. Load settings and check skip conditions
+    const settings = await loadSettings();
+    if (shouldSkip(prompt, settings)) {
       console.log(JSON.stringify({}));
       process.exit(0);
     }

@@ -11,7 +11,7 @@ import {
   extractTextContent,
   getLastAssistantMessage,
   stripSpecialTokens,
-  isSystemPrompt,
+  shouldSkip,
   parseFeedbackItems,
   formatFeedbackForUser,
   appendLog,
@@ -107,17 +107,40 @@ describe("containsEnglish", () => {
   });
 });
 
-describe("isSystemPrompt", () => {
-  it("should detect internal Stop hook prompt", () => {
-    expect(isSystemPrompt("Analyze this conversation and determine: Does the assistant have more autonomous work to do RIGHT NOW?  Conversation: [...]")).toBe(true);
+describe("shouldSkip", () => {
+  it("should skip when prompt matches a skipPattern", () => {
+    const settings = { skipPatterns: ["^Analyze this"], skipAboveLength: 0 };
+    expect(shouldSkip("Analyze this conversation", settings)).toBe(true);
   });
 
-  it("should not flag normal user prompts", () => {
-    expect(isSystemPrompt("Please help me fix this bug")).toBe(false);
+  it("should not skip when no pattern matches", () => {
+    const settings = { skipPatterns: ["^Analyze this"], skipAboveLength: 0 };
+    expect(shouldSkip("Please fix this bug", settings)).toBe(false);
   });
 
-  it("should not flag empty string", () => {
-    expect(isSystemPrompt("")).toBe(false);
+  it("should support regex patterns", () => {
+    const settings = { skipPatterns: ["^(system|internal):"], skipAboveLength: 0 };
+    expect(shouldSkip("system: check status", settings)).toBe(true);
+    expect(shouldSkip("internal: evaluate", settings)).toBe(true);
+    expect(shouldSkip("user prompt here", settings)).toBe(false);
+  });
+
+  it("should skip when prompt exceeds skipAboveLength", () => {
+    const settings = { skipPatterns: [], skipAboveLength: 10 };
+    expect(shouldSkip("short", settings)).toBe(false);
+    expect(shouldSkip("this is a long prompt", settings)).toBe(true);
+  });
+
+  it("should not apply length limit when skipAboveLength is 0", () => {
+    const settings = { skipPatterns: [], skipAboveLength: 0 };
+    expect(shouldSkip("x".repeat(100000), settings)).toBe(false);
+  });
+
+  it("should check both patterns and length", () => {
+    const settings = { skipPatterns: ["^skip"], skipAboveLength: 50 };
+    expect(shouldSkip("skip this", settings)).toBe(true);  // pattern match
+    expect(shouldSkip("x".repeat(51), settings)).toBe(true);  // length match
+    expect(shouldSkip("normal prompt", settings)).toBe(false);  // neither
   });
 });
 
