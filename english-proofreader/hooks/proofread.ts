@@ -33,11 +33,15 @@ export interface FeedbackItem {
 export interface Settings {
   skipPatterns: string[];
   skipAboveLength: number;
+  minEnglishRatio: number;
+  minEnglishWords: number;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   skipPatterns: ["^Analyze this conversation and determine:"],
   skipAboveLength: 0,
+  minEnglishRatio: 0.5,
+  minEnglishWords: 3,
 };
 
 export async function loadSettings(): Promise<Settings> {
@@ -59,6 +63,8 @@ export async function loadSettings(): Promise<Settings> {
     return {
       skipPatterns: Array.isArray(parsed.skipPatterns) ? parsed.skipPatterns : DEFAULT_SETTINGS.skipPatterns,
       skipAboveLength: typeof parsed.skipAboveLength === "number" ? parsed.skipAboveLength : DEFAULT_SETTINGS.skipAboveLength,
+      minEnglishRatio: typeof parsed.minEnglishRatio === "number" ? parsed.minEnglishRatio : DEFAULT_SETTINGS.minEnglishRatio,
+      minEnglishWords: typeof parsed.minEnglishWords === "number" ? parsed.minEnglishWords : DEFAULT_SETTINGS.minEnglishWords,
     };
   } catch {
     return { ...DEFAULT_SETTINGS };
@@ -129,6 +135,13 @@ export function shouldSkip(prompt: string, settings: Settings): boolean {
 // Check if text contains English letters
 export function containsEnglish(text: string): boolean {
   return /[a-zA-Z]/.test(text);
+}
+
+// Count English words in text. A word is "English" if it contains at least one ASCII letter.
+export function countEnglishWords(text: string): { english: number; total: number } {
+  const words = text.split(/\s+/).filter((w) => w.length > 0);
+  const english = words.filter((w) => /[a-zA-Z]/.test(w)).length;
+  return { english, total: words.length };
 }
 
 // Maximum context size in characters (~500 tokens)
@@ -336,17 +349,24 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
-    // 3. Skip if no English content
-    if (!containsEnglish(prompt)) {
-      console.log(JSON.stringify({}));
-      process.exit(0);
-    }
-
-    // 2.5. Strip special tokens (slash commands, mentions)
+    // 3. Strip special tokens (slash commands, mentions)
     const strippedPrompt = stripSpecialTokens(prompt);
 
     // If nothing left after stripping, skip proofreading
     if (!strippedPrompt.trim()) {
+      console.log(JSON.stringify({}));
+      process.exit(0);
+    }
+
+    // 4. Skip if not enough English content
+    const { english, total } = countEnglishWords(strippedPrompt);
+    const ratio = total > 0 ? english / total : 0;
+
+    if (settings.minEnglishWords > 0 && english < settings.minEnglishWords) {
+      console.log(JSON.stringify({}));
+      process.exit(0);
+    }
+    if (settings.minEnglishRatio > 0 && ratio < settings.minEnglishRatio) {
       console.log(JSON.stringify({}));
       process.exit(0);
     }

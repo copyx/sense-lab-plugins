@@ -5,6 +5,7 @@ import { join } from "path";
 import type { FeedbackItem } from "./proofread";
 import {
   containsEnglish,
+  countEnglishWords,
   buildProofreadPrompt,
   parseProofreadResult,
   truncateContext,
@@ -107,37 +108,71 @@ describe("containsEnglish", () => {
   });
 });
 
+describe("countEnglishWords", () => {
+  it("should count all words as English for pure English text", () => {
+    const result = countEnglishWords("Hello world");
+    expect(result).toEqual({ english: 2, total: 2 });
+  });
+
+  it("should count zero for pure Korean text", () => {
+    const result = countEnglishWords("안녕하세요 세계");
+    expect(result).toEqual({ english: 0, total: 2 });
+  });
+
+  it("should handle mixed Korean and English", () => {
+    const result = countEnglishWords("이 코드에서 fix this bug 부분을");
+    expect(result).toEqual({ english: 3, total: 6 });
+  });
+
+  it("should return zeros for empty string", () => {
+    const result = countEnglishWords("");
+    expect(result).toEqual({ english: 0, total: 0 });
+  });
+
+  it("should count words with mixed scripts as English if they contain ASCII letter", () => {
+    // "코드review" contains ASCII letter → English
+    const result = countEnglishWords("코드review 테스트");
+    expect(result).toEqual({ english: 1, total: 2 });
+  });
+
+  it("should not count numbers-only words as English", () => {
+    const result = countEnglishWords("12345 hello");
+    expect(result).toEqual({ english: 1, total: 2 });
+  });
+});
+
 describe("shouldSkip", () => {
+  const base: Settings = { skipPatterns: [], skipAboveLength: 0, minEnglishRatio: 0, minEnglishWords: 0 };
+
   it("should skip when prompt matches a skipPattern", () => {
-    const settings = { skipPatterns: ["^Analyze this"], skipAboveLength: 0 };
+    const settings = { ...base, skipPatterns: ["^Analyze this"] };
     expect(shouldSkip("Analyze this conversation", settings)).toBe(true);
   });
 
   it("should not skip when no pattern matches", () => {
-    const settings = { skipPatterns: ["^Analyze this"], skipAboveLength: 0 };
+    const settings = { ...base, skipPatterns: ["^Analyze this"] };
     expect(shouldSkip("Please fix this bug", settings)).toBe(false);
   });
 
   it("should support regex patterns", () => {
-    const settings = { skipPatterns: ["^(system|internal):"], skipAboveLength: 0 };
+    const settings = { ...base, skipPatterns: ["^(system|internal):"] };
     expect(shouldSkip("system: check status", settings)).toBe(true);
     expect(shouldSkip("internal: evaluate", settings)).toBe(true);
     expect(shouldSkip("user prompt here", settings)).toBe(false);
   });
 
   it("should skip when prompt exceeds skipAboveLength", () => {
-    const settings = { skipPatterns: [], skipAboveLength: 10 };
+    const settings = { ...base, skipAboveLength: 10 };
     expect(shouldSkip("short", settings)).toBe(false);
     expect(shouldSkip("this is a long prompt", settings)).toBe(true);
   });
 
   it("should not apply length limit when skipAboveLength is 0", () => {
-    const settings = { skipPatterns: [], skipAboveLength: 0 };
-    expect(shouldSkip("x".repeat(100000), settings)).toBe(false);
+    expect(shouldSkip("x".repeat(100000), base)).toBe(false);
   });
 
   it("should check both patterns and length", () => {
-    const settings = { skipPatterns: ["^skip"], skipAboveLength: 50 };
+    const settings = { ...base, skipPatterns: ["^skip"], skipAboveLength: 50 };
     expect(shouldSkip("skip this", settings)).toBe(true);  // pattern match
     expect(shouldSkip("x".repeat(51), settings)).toBe(true);  // length match
     expect(shouldSkip("normal prompt", settings)).toBe(false);  // neither
@@ -729,6 +764,8 @@ describe("loadSettings", () => {
     const settings = await loadSettings();
     expect(settings.skipPatterns).toEqual(["^Analyze this conversation and determine:"]);
     expect(settings.skipAboveLength).toBe(0);
+    expect(settings.minEnglishRatio).toBe(0.5);
+    expect(settings.minEnglishWords).toBe(3);
   });
 
   it("should create default settings file when missing", async () => {
@@ -737,6 +774,8 @@ describe("loadSettings", () => {
     const content = JSON.parse(await readFile(settingsPath, "utf-8"));
     expect(content.skipPatterns).toEqual(["^Analyze this conversation and determine:"]);
     expect(content.skipAboveLength).toBe(0);
+    expect(content.minEnglishRatio).toBe(0.5);
+    expect(content.minEnglishWords).toBe(3);
   });
 
   it("should read custom settings from file", async () => {
