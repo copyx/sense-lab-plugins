@@ -388,6 +388,7 @@ async function main(): Promise<void> {
         allowedTools: [],
         maxTurns: 1,
         model: "haiku",
+        persistSession: false,
       },
     })) {
       if (message.type === "result" && "result" in message && message.result) {
