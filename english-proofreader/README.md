@@ -43,8 +43,13 @@ Once installed, the plugin automatically proofreads every English prompt you sub
 - Revise your prompt and re-submit
 
 **If no issues:**
-- You see "✓ No English issues found"
+- You see "✅ No English issues found"
 - Your prompt executes normally
+
+**If proofreading is skipped:**
+- You see "⏭️ Proofreading skipped: [reason]" with the specific reason
+- Your prompt executes normally
+- Reasons include: matches skip pattern, exceeds length limit, insufficient English content, etc.
 
 **If Bun is not installed:**
 - You see an error message with installation instructions
@@ -155,13 +160,13 @@ Bun installed? ─No──→ Block with install instructions
     ↓ Yes
 proofread.ts
     ↓
-Contains English? ─No──→ Allow (silent)
+Contains English? ─No──→ Skip + "⏭️ Proofreading skipped: [reason]"
     ↓ Yes
 Read transcript → Get Claude's last response (if available)
     ↓
 Call Claude Haiku (with context)
     ↓
-Issues found? ─No──→ Allow + "✓ No issues"
+Issues found? ─No──→ Allow + "✅ No issues"
     ↓ Yes
 Block + educational feedback
 ```

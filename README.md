@@ -6,7 +6,7 @@ A personal Claude Code plugin marketplace by jingi.kim.
 
 | Plugin | Description | Version |
 |--------|-------------|---------|
-| [english-proofreader](./english-proofreader) | Proofreads English prompts with educational feedback | 1.0.0 |
+| [english-proofreader](./english-proofreader) | Proofreads English prompts with educational feedback | 1.2.0 |
 
 ## Installation
 

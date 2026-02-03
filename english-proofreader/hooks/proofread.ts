@@ -134,11 +134,15 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
-export function shouldSkip(prompt: string, settings: Settings): boolean {
+export function shouldSkip(prompt: string, settings: Settings): { skip: boolean; reason?: string } {
   if (settings.skipAboveLength > 0 && prompt.length > settings.skipAboveLength) {
-    return true;
+    return { skip: true, reason: `prompt length (${prompt.length}) exceeds skipAboveLength (${settings.skipAboveLength})` };
   }
-  return settings.skipPatterns.some((pattern) => new RegExp(pattern).test(prompt));
+  const matchedPattern = settings.skipPatterns.find((pattern) => new RegExp(pattern).test(prompt));
+  if (matchedPattern) {
+    return { skip: true, reason: `matches skip pattern: ${matchedPattern}` };
+  }
+  return { skip: false };
 }
 
 // Check if text contains English letters
@@ -354,8 +358,13 @@ async function main(): Promise<void> {
 
     // 2. Load settings and check skip conditions
     const settings = await loadSettings();
-    if (shouldSkip(prompt, settings)) {
-      console.log(JSON.stringify({}));
+    const skipResult = shouldSkip(prompt, settings);
+    if (skipResult.skip) {
+      const output: HookOutputBlock = {
+        suppressOutput: true,
+        systemMessage: `⏭️ Proofreading skipped: ${skipResult.reason}`,
+      };
+      console.log(JSON.stringify(output));
       process.exit(0);
     }
 
@@ -364,7 +373,11 @@ async function main(): Promise<void> {
 
     // If nothing left after stripping, skip proofreading
     if (!strippedPrompt.trim()) {
-      console.log(JSON.stringify({}));
+      const output: HookOutputBlock = {
+        suppressOutput: true,
+        systemMessage: "⏭️ Proofreading skipped: no content after stripping commands/mentions",
+      };
+      console.log(JSON.stringify(output));
       process.exit(0);
     }
 
@@ -373,11 +386,19 @@ async function main(): Promise<void> {
     const ratio = total > 0 ? english / total : 0;
 
     if (settings.minEnglishWords > 0 && english < settings.minEnglishWords) {
-      console.log(JSON.stringify({}));
+      const output: HookOutputBlock = {
+        suppressOutput: true,
+        systemMessage: `⏭️ Proofreading skipped: ${english} English word(s) < minEnglishWords (${settings.minEnglishWords})`,
+      };
+      console.log(JSON.stringify(output));
       process.exit(0);
     }
     if (settings.minEnglishRatio > 0 && ratio < settings.minEnglishRatio) {
-      console.log(JSON.stringify({}));
+      const output: HookOutputBlock = {
+        suppressOutput: true,
+        systemMessage: `⏭️ Proofreading skipped: English ratio (${(ratio * 100).toFixed(0)}%) < minEnglishRatio (${(settings.minEnglishRatio * 100).toFixed(0)}%)`,
+      };
+      console.log(JSON.stringify(output));
       process.exit(0);
     }
 

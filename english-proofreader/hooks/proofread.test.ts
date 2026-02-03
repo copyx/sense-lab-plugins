@@ -146,36 +146,36 @@ describe("shouldSkip", () => {
 
   it("should skip when prompt matches a skipPattern", () => {
     const settings = { ...base, skipPatterns: ["^Analyze this"] };
-    expect(shouldSkip("Analyze this conversation", settings)).toBe(true);
+    expect(shouldSkip("Analyze this conversation", settings).skip).toBe(true);
   });
 
   it("should not skip when no pattern matches", () => {
     const settings = { ...base, skipPatterns: ["^Analyze this"] };
-    expect(shouldSkip("Please fix this bug", settings)).toBe(false);
+    expect(shouldSkip("Please fix this bug", settings).skip).toBe(false);
   });
 
   it("should support regex patterns", () => {
     const settings = { ...base, skipPatterns: ["^(system|internal):"] };
-    expect(shouldSkip("system: check status", settings)).toBe(true);
-    expect(shouldSkip("internal: evaluate", settings)).toBe(true);
-    expect(shouldSkip("user prompt here", settings)).toBe(false);
+    expect(shouldSkip("system: check status", settings).skip).toBe(true);
+    expect(shouldSkip("internal: evaluate", settings).skip).toBe(true);
+    expect(shouldSkip("user prompt here", settings).skip).toBe(false);
   });
 
   it("should skip when prompt exceeds skipAboveLength", () => {
     const settings = { ...base, skipAboveLength: 10 };
-    expect(shouldSkip("short", settings)).toBe(false);
-    expect(shouldSkip("this is a long prompt", settings)).toBe(true);
+    expect(shouldSkip("short", settings).skip).toBe(false);
+    expect(shouldSkip("this is a long prompt", settings).skip).toBe(true);
   });
 
   it("should not apply length limit when skipAboveLength is 0", () => {
-    expect(shouldSkip("x".repeat(100000), base)).toBe(false);
+    expect(shouldSkip("x".repeat(100000), base).skip).toBe(false);
   });
 
   it("should check both patterns and length", () => {
     const settings = { ...base, skipPatterns: ["^skip"], skipAboveLength: 50 };
-    expect(shouldSkip("skip this", settings)).toBe(true);  // pattern match
-    expect(shouldSkip("x".repeat(51), settings)).toBe(true);  // length match
-    expect(shouldSkip("normal prompt", settings)).toBe(false);  // neither
+    expect(shouldSkip("skip this", settings).skip).toBe(true);  // pattern match
+    expect(shouldSkip("x".repeat(51), settings).skip).toBe(true);  // length match
+    expect(shouldSkip("normal prompt", settings).skip).toBe(false);  // neither
   });
 });
 
@@ -609,34 +609,40 @@ const INTEGRATION_TIMEOUT = 30000; // 30 seconds
 
 describe("Integration: proofread.ts script", () => {
   it(
-    "should pass through Korean-only prompts",
+    "should pass through Korean-only prompts with skip message",
     async () => {
       const { stdout, code } = await runScript({ prompt: "한글만 있는 프롬프트입니다" });
       expect(code).toBe(0);
       const output = JSON.parse(stdout.trim());
-      expect(output).toEqual({});
+      expect(output.suppressOutput).toBe(true);
+      expect(output.systemMessage).toContain("Proofreading skipped");
+      expect(output.systemMessage).toContain("English word(s) < minEnglishWords");
     },
     { timeout: INTEGRATION_TIMEOUT }
   );
 
   it(
-    "should pass through empty prompts",
+    "should pass through empty prompts with skip message",
     async () => {
       const { stdout, code } = await runScript({ prompt: "" });
       expect(code).toBe(0);
       const output = JSON.parse(stdout.trim());
-      expect(output).toEqual({});
+      expect(output.suppressOutput).toBe(true);
+      expect(output.systemMessage).toContain("Proofreading skipped");
+      expect(output.systemMessage).toContain("no content after stripping");
     },
     { timeout: INTEGRATION_TIMEOUT }
   );
 
   it(
-    "should pass through prompts with numbers only",
+    "should pass through prompts with numbers only with skip message",
     async () => {
       const { stdout, code } = await runScript({ prompt: "12345 67890" });
       expect(code).toBe(0);
       const output = JSON.parse(stdout.trim());
-      expect(output).toEqual({});
+      expect(output.suppressOutput).toBe(true);
+      expect(output.systemMessage).toContain("Proofreading skipped");
+      expect(output.systemMessage).toContain("English word(s) < minEnglishWords");
     },
     { timeout: INTEGRATION_TIMEOUT }
   );
