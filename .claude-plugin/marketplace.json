@@ -10,7 +10,11 @@
   "plugins": [
     {
       "name": "english-proofreader",
-      "source": "./english-proofreader",
+      "source": {
+        "source": "github",
+        "repo": "jingi-kim/sense-lab-plugins",
+        "ref": "v1.0.0"
+      },
       "description": "Proofreads English prompts before execution with educational feedback",
       "version": "1.0.0",
       "author": {
