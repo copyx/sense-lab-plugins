@@ -100,6 +100,10 @@ Before releasing:
 - [ ] Tag created
 - [ ] Pushed to GitHub
 
-## Current Release
+## Release History
+
+**v1.1.0** - Auto-merge settings feature
+- Auto-merge user settings with new defaults on plugin updates
+- Added configuration documentation to README
 
 **v1.0.0** - First public release

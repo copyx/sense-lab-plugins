@@ -51,21 +51,30 @@ export async function loadSettings(): Promise<Settings> {
     const settingsPath = join(settingsDir, "settings.json");
 
     let fileContent: string;
+    let parsed: Partial<Settings>;
+
     try {
       fileContent = await Bun.file(settingsPath).text();
+      parsed = JSON.parse(fileContent);
     } catch {
+      // No settings file exists, create one with defaults
       await mkdir(settingsDir, { recursive: true });
       await Bun.write(settingsPath, JSON.stringify(DEFAULT_SETTINGS, null, 2) + "\n");
       return { ...DEFAULT_SETTINGS };
     }
 
-    const parsed = JSON.parse(fileContent);
-    return {
+    // Merge user settings with defaults (user values take precedence)
+    const merged: Settings = {
       skipPatterns: Array.isArray(parsed.skipPatterns) ? parsed.skipPatterns : DEFAULT_SETTINGS.skipPatterns,
       skipAboveLength: typeof parsed.skipAboveLength === "number" ? parsed.skipAboveLength : DEFAULT_SETTINGS.skipAboveLength,
       minEnglishRatio: typeof parsed.minEnglishRatio === "number" ? parsed.minEnglishRatio : DEFAULT_SETTINGS.minEnglishRatio,
       minEnglishWords: typeof parsed.minEnglishWords === "number" ? parsed.minEnglishWords : DEFAULT_SETTINGS.minEnglishWords,
     };
+
+    // Write merged settings back to add any new properties from defaults
+    await Bun.write(settingsPath, JSON.stringify(merged, null, 2) + "\n");
+
+    return merged;
   } catch {
     return { ...DEFAULT_SETTINGS };
   }

@@ -49,6 +49,72 @@ Once installed, the plugin automatically proofreads every English prompt you sub
 **If Bun is not installed:**
 - You see an error message with installation instructions
 
+## Configuration
+
+Settings are stored in `~/.english-proofreader/settings.json`. The file is automatically created with defaults on first use.
+
+### Available Settings
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `skipPatterns` | `string[]` | `["^Analyze this conversation and determine:"]` | Regular expression patterns to skip proofreading (e.g., system prompts) |
+| `skipAboveLength` | `number` | `0` | Skip proofreading if prompt exceeds this character count (0 = no limit) |
+| `minEnglishRatio` | `number` | `0.5` | Minimum ratio of English words to total words (0.0-1.0). Skips if below threshold. |
+| `minEnglishWords` | `number` | `3` | Minimum number of English words required for proofreading. Skips if below threshold. |
+
+### Auto-Merge Behavior
+
+When the plugin updates with new settings properties:
+- Your existing customizations are **preserved**
+- New properties are **automatically added** with default values
+- You don't need to manually update your settings file
+
+### Common Customizations
+
+**Skip very long prompts:**
+```json
+{
+  "skipAboveLength": 1000,
+  "minEnglishRatio": 0.5,
+  "minEnglishWords": 3,
+  "skipPatterns": ["^Analyze this conversation and determine:"]
+}
+```
+
+**Proofread Korean-heavy content (lower English ratio threshold):**
+```json
+{
+  "minEnglishRatio": 0.2,
+  "minEnglishWords": 2,
+  "skipAboveLength": 0,
+  "skipPatterns": ["^Analyze this conversation and determine:"]
+}
+```
+
+**Skip specific system prompt patterns:**
+```json
+{
+  "skipPatterns": [
+    "^Analyze this conversation and determine:",
+    "^Please summarize the following:",
+    "^Debug output:"
+  ],
+  "minEnglishRatio": 0.5,
+  "minEnglishWords": 3,
+  "skipAboveLength": 0
+}
+```
+
+**Disable length-based skipping entirely:**
+```json
+{
+  "skipAboveLength": 0,
+  "minEnglishRatio": 0.5,
+  "minEnglishWords": 3,
+  "skipPatterns": []
+}
+```
+
 ## Example
 
 **Your prompt:**
