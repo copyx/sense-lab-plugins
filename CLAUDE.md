@@ -118,11 +118,59 @@ cd english-proofreader && bun test             # 유닛 테스트
 {"extraKnownMarketplaces":{"sense-lab-plugins":{"source":{"source":"github","repo":"jingi-kim/sense-lab-plugins"}}},"enabledPlugins":{"english-proofreader@sense-lab-plugins":true}}
 ```
 
+## Release Management
+
+- Follows [semantic versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
+- Git tags (e.g., `v1.0.0`) control plugin distribution
+- `marketplace.json` `ref` field must match git tag for auto-updates
+- Both `plugin.json` and `marketplace.json` versions must stay in sync
+- See `RELEASE.md` for step-by-step release process
+
+### Version Control
+
+- Plugin version in `plugin.json` is development version
+- Released versions are tagged in git (`git tag -a v1.0.0`)
+- Marketplace `ref` field pins users to specific tag
+- Auto-updates happen when `ref` changes and users have auto-update enabled
+
 ## Conventions
 
+### Naming & Structure
+
 - Names: `kebab-case`
-- Version: Semantic versioning
 - Hook scripts: Shell wrappers for dependency checks
+
+### Versioning (Semver)
+
+Format: `MAJOR.MINOR.PATCH` (e.g., `1.2.3`)
+
+- **MAJOR**: Breaking changes (incompatible API changes)
+- **MINOR**: New features (backwards-compatible)
+- **PATCH**: Bug fixes (backwards-compatible)
+
+### Commit Messages (Conventional Commits)
+
+Format: `<type>(<scope>): <description>`
+
+**Types:**
+- `feat`: New feature (bumps MINOR)
+- `fix`: Bug fix (bumps PATCH)
+- `docs`: Documentation only
+- `chore`: Maintenance (dependencies, config)
+- `refactor`: Code restructuring
+- `test`: Test additions/changes
+- `perf`: Performance improvements
+
+**Breaking changes:** Add `!` after type or `BREAKING CHANGE:` in footer (bumps MAJOR)
+
+**Examples:**
+```
+feat(proofreader): add minEnglishRatio setting
+fix(hooks): handle curly quotes in agent mentions
+docs: update release workflow
+chore: bump version to v1.1.0
+feat(api)!: rename output field (breaking change)
+```
 
 ## References
 
