@@ -336,7 +336,8 @@ Be thorough but focus on actual errors, not style preferences. If the English is
 export function parseProofreadResult(result: string): ProofreadResult {
   const trimmed = result.trim();
 
-  if (trimmed === "NO_ISSUES" || trimmed.startsWith("NO_ISSUES")) {
+  // Check if NO_ISSUES appears anywhere in the response (handles verbose LLM responses)
+  if (trimmed.includes("NO_ISSUES")) {
     return { hasIssues: false, items: [] };
   }
 

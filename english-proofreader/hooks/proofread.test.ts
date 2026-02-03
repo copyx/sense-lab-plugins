@@ -379,6 +379,22 @@ describe("parseProofreadResult", () => {
     expect(result).toEqual({ hasIssues: false, items: [] });
   });
 
+  it("should return hasIssues: false when NO_ISSUES appears at end of verbose response", () => {
+    const verboseResponse = `I'll analyze this text for English errors.
+
+Looking at the sentence:
+"I downloaded the file."
+
+**Analysis:**
+1. Grammar: correct
+2. Word usage: correct
+
+**Conclusion:**
+NO_ISSUES`;
+    const result = parseProofreadResult(verboseResponse);
+    expect(result).toEqual({ hasIssues: false, items: [] });
+  });
+
   it("should return structured items for valid JSON feedback", () => {
     const json = JSON.stringify([
       { original: "I have went", corrected: "I have gone", explanation: "Past participle." },
