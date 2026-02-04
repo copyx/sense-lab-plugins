@@ -10,11 +10,7 @@
   "plugins": [
     {
       "name": "english-proofreader",
-      "source": {
-        "source": "github",
-        "repo": "copyx/sense-lab-plugins",
-        "ref": "v1.2.0"
-      },
+      "source": "./english-proofreader",
       "description": "Proofreads English prompts before execution with educational feedback",
       "version": "1.2.0",
       "author": {
