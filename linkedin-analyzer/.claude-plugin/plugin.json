@@ -1,0 +1,10 @@
+{
+  "name": "linkedin-analyzer",
+  "version": "1.0.0",
+  "description": "Extract and analyze LinkedIn saved posts using Claude Agent SDK",
+  "author": {
+    "name": "Jingi Kim"
+  },
+  "keywords": ["linkedin", "analysis", "agent-sdk", "ai"],
+  "repository": "https://github.com/copyx/sense-lab-plugins"
+}

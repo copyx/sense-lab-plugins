@@ -1,0 +1,27 @@
+# Environment variables
+.env
+
+# Dependencies
+node_modules/
+
+# Output files
+output/
+data/
+
+# Browser data
+.playwright/
+
+# OS files
+.DS_Store
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.swp

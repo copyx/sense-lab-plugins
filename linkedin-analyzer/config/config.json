@@ -1,0 +1,30 @@
+{
+  "extraction": {
+    "maxScrollAttempts": 100,
+    "scrollDelay": 1500,
+    "scrollDistance": 500,
+    "timeout": 30000,
+    "headless": false,
+    "slowMo": 50
+  },
+  "analysis": {
+    "model": "claude-3-5-sonnet-20241022",
+    "maxTokens": 4096,
+    "temperature": 0.7,
+    "enableTopicClustering": true,
+    "enableSentiment": true,
+    "enableTrends": true,
+    "minPostsForTrends": 10
+  },
+  "report": {
+    "format": "markdown",
+    "includeActionItems": true,
+    "includeAuthorInsights": true,
+    "topThemesCount": 5,
+    "topPostsCount": 10
+  },
+  "incremental": {
+    "enabled": true,
+    "trackingFile": "data/last-extraction.json"
+  }
+}
