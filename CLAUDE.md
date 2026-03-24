@@ -115,7 +115,7 @@ cd english-proofreader && bun test             # 유닛 테스트
 ### Team Config (`.claude/settings.json`)
 
 ```json
-{"extraKnownMarketplaces":{"sense-lab-plugins":{"source":{"source":"github","repo":"jingi-kim/sense-lab-plugins"}}},"enabledPlugins":{"english-proofreader@sense-lab-plugins":true}}
+{"extraKnownMarketplaces":{"sense-lab-plugins":{"source":{"source":"github","repo":"copyx/sense-lab-plugins"}}},"enabledPlugins":{"english-proofreader@sense-lab-plugins":true}}
 ```
 
 ## Release Management

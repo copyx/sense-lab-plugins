@@ -25,7 +25,7 @@ Then restart your terminal.
 
 ```bash
 # Add the marketplace (if not already added)
-/plugin marketplace add jingi-kim/sense-lab-plugins
+/plugin marketplace add copyx/sense-lab-plugins
 
 # Install the plugin
 /plugin install english-proofreader@sense-lab-plugins

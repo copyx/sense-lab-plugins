@@ -13,7 +13,7 @@ A personal Claude Code plugin marketplace by jingi.kim.
 ### Step 1: Add Marketplace
 
 ```bash
-/plugin marketplace add jingi-kim/sense-lab-plugins
+/plugin marketplace add copyx/sense-lab-plugins
 ```
 
 ### Step 2: Install Plugin
